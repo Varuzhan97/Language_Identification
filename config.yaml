@@ -1,0 +1,13 @@
+Project: Language Identification
+Languages:
+  hy: Armenian
+  as: Assamese
+Dataset Root Path: /home/varuzhan/Desktop/Language_Identification/Data/LID_DB
+Batch Size: 1
+Image Width: 500
+Image Height: 128
+Input Shape: [128, 500, 1]
+Initial Learning Rate: 0.001
+Model: inceptionv3
+Epochs: 1
+label_names: ["HY", "AS"]
