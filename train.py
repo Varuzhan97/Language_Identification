@@ -4,22 +4,33 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tensorflow.keras.callbacks import EarlyStopping, LearningRateScheduler
 from tensorflow.keras import metrics
-from Utils.csv_loader import CSVLoader
-from Models import inceptionv3, inceptionv3_crnn
 from datetime import datetime
-from Utils.evaluate import evaluate
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, CSVLogger, EarlyStopping
 from tensorflow.keras.optimizers import Adam, RMSprop, SGD
+import math
+from Models import inceptionv3, inceptionv3_crnn
+from Utils.csv_loader import CSVLoader
+from Utils.evaluate import evaluate
 from global_parameters import training_parameters
 
-def step_decay(epoch, lr):
-    lrate = lr * math.pow(training_parameters['drop'], math.floor((1+epoch)/training_parameters['epochs_drop']))
-    return lrate
+#Time-based decay
+def lr_time_based_decay(epoch, lr):
+    decay = training_parameters['learning_rate'] / training_parameters['epochs']
+    return lr * 1 / (1 + decay * epoch)
+
+#Step decay
+def lr_step_decay(epoch, lr):
+    drop_rate = 0.5
+    epochs_drop = 10.0
+    return training_parameters['learning_rate'] * math.pow(drop_rate, math.floor(epoch/epochs_drop))
+
+#Exponential decay
+def lr_exp_decay(epoch, lr):
+    k = 0.1
+    return training_parameters['learning_rate'] * math.exp(-k*epoch)
 
 if __name__ == "__main__":
     main_dir = os.getcwd()
-    print(training_parameters['labels'], len(training_parameters['labels']))
-    #time.sleep(500)
     #image_width = main_config["Image Width"]
     #image_height = main_config["Image Height"]
 
@@ -42,7 +53,7 @@ if __name__ == "__main__":
 
     tensorboard_callback = TensorBoard(log_dir=log_dir, write_images=True)
     csv_logger_callback = CSVLogger(os.path.join(log_dir, "log.csv"))
-    early_stopping_callback = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1, mode="min")
+    early_stopping_callback = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode="min")
     #learning_rate_decay = LearningRateScheduler(step_decay, verbose=1)
 
     validation_steps = int((validation_data_generator.get_num_files()) / training_parameters['batch_size'])
@@ -74,21 +85,29 @@ if __name__ == "__main__":
         train_data_generator.get_data(),
         steps_per_epoch=steps_per_epoch,
         epochs=training_parameters['epochs'],
-        callbacks=[model_checkpoint_callback, tensorboard_callback, csv_logger_callback, early_stopping_callback], #, learning_rate_decay],
+        callbacks=[LearningRateScheduler(lr_step_decay, verbose=1), model_checkpoint_callback, tensorboard_callback, csv_logger_callback, early_stopping_callback], #, learning_rate_decay],
         verbose=1,
         validation_data=validation_data_generator.get_data(should_shuffle=False),
         validation_steps=validation_steps,
         workers=1,
+        use_multiprocessing=False,
         max_queue_size=training_parameters['batch_size']
     )
+    save_path = os.path.join(log_dir, "model_save")
 
     #Do evaluation on model with best validation accuracy
     best_epoch = np.argmax(history.history["val_accuracy"])
-    print("Log files: ", log_dir)
-    print("Best epoch: ", best_epoch + 1, checkpoint_filename)
-    model_file_name = checkpoint_filename.replace("{epoch:02d}", "{:02d}".format(best_epoch+1))
+    best_model_path = checkpoint_filename.replace("{epoch:02d}", "{:02d}".format(best_epoch+1))
+    print("Best epoch: {}, Path: {}".format(best_epoch + 1, best_model_path))
 
-    evaluate(test_data_dir, model_file_name, training_parameters['batch_size'], training_parameters['labels'], training_parameters['input_shape'], len(training_parameters['labels']))
+    #Rename best model folder
+    new_path_name = os.path.dirname(best_model_path)
+    new_path_name = os.path.join(new_path_name, "BEST_MODEL")
+
+    os.rename(best_model_path, new_path_name)
+    print("Best model path renamed to: ", new_path_name)
+
+    evaluate(test_data_dir, new_path_name, training_parameters['batch_size'], training_parameters['labels'], training_parameters['input_shape'], len(training_parameters['labels']))
 
     plt.plot(history.history['accuracy'])
     plt.plot(history.history['val_accuracy'])
@@ -97,5 +116,3 @@ if __name__ == "__main__":
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'], loc='upper left')
     plt.show()
-
-    config_file.close()

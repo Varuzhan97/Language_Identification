@@ -27,7 +27,7 @@ def metrics_report(y_true, y_pred, probabilities, label_names=None):
     print("Accuracy %s" % accuracy_score(y_true, y_pred))
     print("Equal Error Rate (avg) %s" % equal_error_rate(y_true, probabilities))
     print(classification_report(y_true, y_pred, labels=available_labels, target_names=label_names))
-    print(confusion_matrix(y_true, y_pred, labels=available_labels))
+    #print(confusion_matrix(y_true, y_pred, labels=available_labels))
 
 
 def evaluate(dataset_dir, model_file_name, batch_size, label_names, input_shape, num_classes):
@@ -36,12 +36,13 @@ def evaluate(dataset_dir, model_file_name, batch_size, label_names, input_shape,
 
     # Model Generation
     model = load_model(model_file_name)
+    print("looooooooooooo", model_file_name)
     #print(model.summary())
 
     probabilities = model.predict(
         data_generator.get_data(should_shuffle=False, is_prediction=True),
         steps=(data_generator.get_num_files()/batch_size),
-        workers=1,  # parallelization messes up data order. careful!
+        workers=1, # parallelization messes up data order. careful!
         max_queue_size=batch_size
     )
 

@@ -24,13 +24,13 @@ def create_model(input_shape, num_classes):
     x = Permute((2, 1, 3))(x)
 
     # (bs, x, y, c) --> (bs, x, y * c)
-    _x, _y, _c = [int(s) for s in x._shape[1:]]
+    _x, _y, _c = [int(s) for s in x.shape[1:]]
     x = Reshape((_x, _y*_c))(x)
     x = Bidirectional(LSTM(512, return_sequences=False), merge_mode="concat")(x)
 
     predictions = Dense(num_classes, activation='softmax')(x)
 
     model = Model(inputs=inception_model.input, outputs=predictions)
-    model.load_weights("logs/2017-01-02-13-39-41/weights.06.model")
+    #model.load_weights("logs/2017-01-02-13-39-41/weights.06.model")
 
     return model

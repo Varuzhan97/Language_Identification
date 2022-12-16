@@ -32,7 +32,6 @@ def audio_to_spectrogram(audio_file, sample_rate, pixel_per_sec, image_width, im
     '''
     try:
         fix_audio_segment_to_10_seconds(audio_file, sample_rate)
-        pixel_per_sec = 50
         #Generate temporary spectrogram
         temp_image_file = audio_file + '_temp.png'
         command = "sox -V0 '{}' -n remix 1 rate 10k spectrogram -y {} -X {} -m -r -o {}".format(audio_file, image_height, pixel_per_sec, temp_image_file)
