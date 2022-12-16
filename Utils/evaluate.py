@@ -36,7 +36,6 @@ def evaluate(dataset_dir, model_file_name, batch_size, label_names, input_shape,
 
     # Model Generation
     model = load_model(model_file_name)
-    print("looooooooooooo", model_file_name)
     #print(model.summary())
 
     probabilities = model.predict(

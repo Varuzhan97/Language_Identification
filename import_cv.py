@@ -167,7 +167,6 @@ def copy_audio_files_for_language(rows, imported_time, language, label, original
         os.makedirs(target_dir)
 
     total_imported_seconds = imported_time / import_parameters['sample_rate']
-    print("heeeeeeeeeeeeeeey:", total_imported_seconds, secs_to_hours(total_imported_seconds))
 
     #Process files
     for filename in rows:
