@@ -10,7 +10,7 @@ from subprocess import Popen, PIPE, STDOUT
 def fix_audio_segment_to_10_seconds(file_path, sample_rate):
     audio_segment, _ = lr.load(file_path, sr=sample_rate)
     target_len = 10 * sample_rate
-    audio_segment = np.concatenate([audio_segment]*3, axis=0)
+    audio_segment = np.concatenate([audio_segment]*100, axis=0)
     audio_segment = audio_segment[0:target_len]
 
     #Delete old file
@@ -18,7 +18,7 @@ def fix_audio_segment_to_10_seconds(file_path, sample_rate):
     #Save new file(with length of 10 seconds)
     sf.write(file_path, audio_segment, sample_rate)
 
-def audio_to_spectrogram(audio_file, sample_rate, pixel_per_sec, image_width, image_height):
+def audio_to_spectrogram(audio_file, sample_rate, pixel_per_sec, image_width, image_height, is_prediction = False):
     '''
     V0 - Verbosity level: ignore everything
     c 1 - channel 1 / mono
@@ -69,8 +69,13 @@ def audio_to_spectrogram(audio_file, sample_rate, pixel_per_sec, image_width, im
                 continue
 
             imageio.imwrite(image_file_path, slice)
-            yield image_file_path
             j+=1
+            if is_prediction:
+                os.remove(image_file_path)
+                yield slice
+            else:
+                yield image_file_path
+
     except Exception as e:
                 print("SpectrogramGenerator Exception: ", e, audio_file)
                 pass

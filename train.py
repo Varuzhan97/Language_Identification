@@ -8,7 +8,7 @@ from datetime import datetime
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, CSVLogger, EarlyStopping
 from tensorflow.keras.optimizers import Adam, RMSprop, SGD
 import math
-from Models import inceptionv3, inceptionv3_crnn
+from Models import inceptionv3, inceptionv3_crnn, topcoder_5s_finetune, topcoder_crnn_finetune
 from Utils.csv_loader import CSVLoader
 from Utils.evaluate import evaluate
 from global_parameters import training_parameters
@@ -65,8 +65,12 @@ if __name__ == "__main__":
     model = None
     if training_parameters['model'] == "inceptionv3":
         model = inceptionv3.create_model(train_data_generator.get_input_shape(), len(training_parameters['labels']))
-    if training_parameters['model'] == "inceptionv3_crnn":
+    elif training_parameters['model'] == "inceptionv3_crnn":
         model = inceptionv3_crnn.create_model(train_data_generator.get_input_shape(), len(training_parameters['labels']))
+    elif training_parameters['model'] == "topcoder_5s_finetune":
+        model = topcoder_5s_finetune.create_model(train_data_generator.get_input_shape(), len(training_parameters['labels']))
+    elif training_parameters['model'] == 'topcoder_crnn_finetune':
+        model = topcoder_crnn_finetune.create_model(train_data_generator.get_input_shape(), len(training_parameters['labels']))
     #print(model.summary())
 
     optimizer = Adam(learning_rate=training_parameters['learning_rate'])
@@ -85,7 +89,7 @@ if __name__ == "__main__":
         train_data_generator.get_data(),
         steps_per_epoch=steps_per_epoch,
         epochs=training_parameters['epochs'],
-        callbacks=[LearningRateScheduler(lr_step_decay, verbose=1), model_checkpoint_callback, tensorboard_callback, csv_logger_callback, early_stopping_callback], #, learning_rate_decay],
+        callbacks=[LearningRateScheduler(training_parameters['decay'], verbose=1), model_checkpoint_callback, tensorboard_callback, csv_logger_callback, early_stopping_callback], #, learning_rate_decay],
         verbose=1,
         validation_data=validation_data_generator.get_data(should_shuffle=False),
         validation_steps=validation_steps,

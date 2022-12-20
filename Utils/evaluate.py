@@ -4,9 +4,7 @@ from yaml import load
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_curve
 from scipy.optimize import brentq
 from scipy.interpolate import interp1d
-#from keras.models import load_model
 from tensorflow.keras.models import load_model
-#from keras.utils.np_utils import to_categorical
 from tensorflow.keras.utils import to_categorical
 
 from Utils.csv_loader import CSVLoader
